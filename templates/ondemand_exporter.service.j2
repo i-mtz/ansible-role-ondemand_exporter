@@ -1,0 +1,35 @@
+{{ ansible_managed | comment }}
+
+[Unit]
+Description=OnDemand Prometheus Exporter
+After=network-online.target
+
+[Service]
+User={{ ondemand_exporter_system_user }}
+Group={{ ondemand_exporter_system_group }}
+SyslogIdentifier=ondemand_exporter
+{% if ondemand_exporter_listen_address %}
+Environment="LISTEN_ADDRESS={{ ondemand_exporter_listen_address }}:{{ ondemand_exporter_listen_port }}"
+{% else %}
+Environment="LISTEN_ADDRESS=:{{ ondemand_exporter_listen_port }}"
+{% endif %}
+{% if ondemand_exporter_apache_status_enabled %}
+Environment="APACHE_STATUS_URL={{ ondemand_exporter_collector_apache_status_url}}"
+{% endif %}
+Environment=PUNS_TIMEOUT={{ ondemand_exporter_collector_puns_timeout }}
+Environment=PASSENGER_STATUS={{ ondemand_exporter_path_passenger_status }}
+Environment=PASSENGER_TIMEOUT={{ ondemand_exporter_collector_passenger_timeout }}
+Environment=PROCESS_TIMEOUT={{ ondemand_exporter_collector_process_timeout }}
+
+ExecStart=/usr/bin/ondemand_exporter --log.level=debug
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=process
+Restart=always
+MemoryHigh=500M
+MemoryMax=750M
+
+RestartSec=1
+StartLimitInterval=0
+
+[Install]
+WantedBy=multi-user.target

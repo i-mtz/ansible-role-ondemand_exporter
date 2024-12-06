@@ -1,0 +1,39 @@
+---
+- name: Copy the ondemand_exporter sudo file
+  ansible.builtin.template:
+    src: sudoers.conf.j2
+    dest: /etc/sudoers.d/ondemand_exporter
+    owner: root
+    group: root
+    mode: 0440
+  notify: restart ondemand_exporter
+
+- name: Copy the ondemand_exporter systemd service file
+  ansible.builtin.template:
+    src: ondemand_exporter.service.j2
+    dest: /etc/systemd/system/ondemand_exporter.service
+    owner: root
+    group: root
+    mode: 0644
+  notify: restart ondemand_exporter
+
+- name: Setup apache server stats to be collected by the exporter
+  block:
+    - name: Copy the apache server stats vhost
+      ansible.builtin.template:
+        src: apache.conf
+        dest: /etc/apache2/sites-available/apache_status_ood_exporter
+        owner: root
+        group: root
+        mode: 0644
+
+    - name: Add vhost symlink in sites-enabled.
+      ansible.builtin.file:
+        src: "/etc/apache2/sites-available/apache_status_ood_exporter"
+        dest: "/etc/apache2/sites-enabled/apache_status_ood_exporter"
+        state: link
+        mode: 0644
+        force: "{{ ansible_check_mode }}"
+      notify: restart apache
+  when: ondemand_exporter_apache_status_enabled
+

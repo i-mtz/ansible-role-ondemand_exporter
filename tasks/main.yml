@@ -1,0 +1,46 @@
+---
+- name: Preflight
+  ansible.builtin.include_tasks:
+    file: preflight.yml
+    apply:
+      tags:
+        - ondemand_exporter_install
+        - ondemand_exporter_configure
+        - ondemand_exporter_run
+  tags:
+    - ondemand_exporter_install
+    - ondemand_exporter_configure
+    - ondemand_exporter_run
+
+- name: Install
+  ansible.builtin.include_tasks:
+    file: install.yml
+    apply:
+      become: true
+      tags:
+        - ondemand_exporter_install
+  tags:
+    - ondemand_exporter_install
+
+
+- name: Configure
+  ansible.builtin.include_tasks:
+    file: configure.yml
+    apply:
+      become: true
+      tags:
+        - ondemand_exporter_configure
+  tags:
+    - ondemand_exporter_configure
+
+- name: Ensure ondemand_exporter is enabled on boot
+  become: true
+  ansible.builtin.systemd:
+    daemon_reload: true
+    name: ondemand_exporter
+    enabled: true
+    state: started
+  when:
+    - not ansible_check_mode
+  tags:
+    - ondemand_exporter_run

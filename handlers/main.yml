@@ -1,0 +1,10 @@
+---
+- name: Restart ondemand_exporter
+  listen: "restart ondemand_exporter"
+  become: true
+  ansible.builtin.systemd:
+    daemon_reload: true
+    name: ondemand_exporter
+    state: restarted
+  when:
+    - not ansible_check_mode

@@ -1,0 +1,85 @@
+---
+- name: Assert usage of systemd as an init system
+  ansible.builtin.assert:
+    that: ansible_service_mgr == 'systemd'
+    msg: "This role only works with systemd"
+
+- name: Install package fact dependencies
+  become: true
+  ansible.builtin.package:
+    name: "{{ _pkg_fact_req }}"
+    state: present
+  when: (_pkg_fact_req)
+  vars:
+    _pkg_fact_req: "{% if (ansible_pkg_mgr == 'apt') %}\
+      {{ ('python-apt' if ansible_python_version is version('3', '<') else 'python3-apt') }}
+      {% else %}\
+      {% endif %}"
+
+- name: Gather package facts
+  ansible.builtin.package_facts:
+  when: "not 'packages' in ansible_facts"
+
+- name: Check that we are using a valid ip address to listen to
+  ansible.builtin.assert:
+    that:  "{{ ondemand_exporter_listen_address is ansible.utils.ip_address }}"
+  when:
+    - ondemand_exporter_listen_address is defined
+    - ondemand_exporter_listen_address | length > 0
+  tags:
+    - ondemand_exporter_install
+
+- name: Check that we have apache already installed if we are enabling the apache status site
+  ansible.builtin.assert:
+    that: packages['apache2'] is defined
+  when: ondemand_exporter_apache_status_enabled|bool
+  tags:
+    - ondemand_exporter_install
+
+- name: Check if ondemand_exporter is installed
+  ansible.builtin.stat:
+    path: "{{ ondemand_exporter_binary_install_dir }}/ondemand_exporter"
+  register: __ondemand_exporter_is_installed
+  check_mode: false
+  tags:
+    - ondemand_exporter_install
+
+- name: Gather currently installed ondemand_exporter version (if any)
+  ansible.builtin.command: "{{ ondemand_exporter_binary_install_dir }}/ondemand_exporter --version"
+  changed_when: false
+  register: __ondemand_exporter_current_version_output
+  check_mode: false
+  when: __ondemand_exporter_is_installed.stat.exists
+  tags:
+    - ondemand_exporter_install
+
+- name: Discover latest version
+  ansible.builtin.set_fact:
+    ondemand_exporter_version: "{{ (lookup('url', 'https://api.github.com/repos/{{ _ondemand_exporter_repo }}/releases/latest', headers=_github_api_headers,
+                            split_lines=False) | from_json).get('tag_name') | replace('v', '') }}"
+  run_once: true
+  until: ondemand_exporter_version is version('0.0.0', '>=')
+  retries: 10
+  when:
+    - ondemand_exporter_version == "latest"
+    - ondemand_exporter_binary_local_dir | length == 0
+    - not ondemand_exporter_skip_install
+
+- name: Get ondemand_exporter binary checksum
+  when:
+    - ondemand_exporter_binary_local_dir | length == 0
+    - not ondemand_exporter_skip_install
+  block:
+    - name: Get checksum list from github
+      ansible.builtin.set_fact:
+        __ondemand_exporter_checksums: "{{ lookup('url', ondemand_exporter_checksums_url, headers=_github_api_headers, wantlist=True) | list }}"
+      run_once: true
+      until: __ondemand_exporter_checksums is search('linux-' + go_arch + '.tar.gz')
+      retries: 10
+
+    - name: "Get checksum for {{ go_arch }}"
+      ansible.builtin.set_fact:
+        __ondemand_exporter_checksum: "{{ item.split(' ')[0] }}"
+      with_items: "{{ __ondemand_exporter_checksums }}"
+      when:
+        - "('linux-' + go_arch + '.tar.gz') in item"

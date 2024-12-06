@@ -1,0 +1,4 @@
+Defaults:{{ ondemand_exporter_system_user }} !syslog
+Defaults:{{ ondemand_exporter_system_user }} !requiretty
+{{ ondemand_exporter_system_user }} ALL=(ALL) NOPASSWD:/opt/ood/nginx_stage/sbin/nginx_stage nginx_list
+{{ ondemand_exporter_system_user }} ALL=(ALL) NOPASSWD:/usr/sbin/ondemand-passenger-status

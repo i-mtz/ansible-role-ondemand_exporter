@@ -1,0 +1,31 @@
+---
+ondemand_exporter_version: 0.10.0
+ondemand_exporter_binary_local_dir: ""
+ondemand_exporter_binary_url: "https://github.com/{{ _ondemand_exporter_repo }}/releases/download/v{{ ondemand_exporter_version }}/\
+                              ondemand_exporter-{{ ondemand_exporter_version }}.linux-{{ go_arch }}.tar.gz"
+ondemand_exporter_checksums_url: "https://github.com/{{ _ondemand_exporter_repo }}/releases/download/v{{ ondemand_exporter_version }}/sha256sums.txt"
+ondemand_exporter_skip_install: false
+
+ondemand_exporter_listen_address: ''
+ondemand_exporter_listen_port: '9301'
+ondemand_exporter_web_telemetry_path: "/metrics"
+
+ondemand_exporter_collector_apache_status_url: "http://127.0.0.1:81/server-status"
+# The following options are the default ones
+ondemand_exporter_collector_apache_timeout: '10'
+ondemand_exporter_collector_puns_timeout: '10'
+ondemand_exporter_collector_passenger_timeout: '30'
+ondemand_exporter_path_passenger_status: '/usr/sbin/ondemand-passenger-status'
+ondemand_exporter_collector_process_timeout: '10'
+ondemand_exporter_log_level: 'info'
+ondemand_exporter_log_format: 'logfmt'
+
+
+ondemand_exporter_binary_install_dir: "/usr/local/bin"
+ondemand_exporter_system_group: "ondemand_exporter"
+ondemand_exporter_system_user: "{{ ondemand_exporter_system_group }}"
+
+ondemand_exporter_apache_status_enabled: true
+
+# Local path to stash the archive and its extraction
+ondemand_exporter_archive_path: /tmp

@@ -1,0 +1,17 @@
+---
+galaxy_info:
+  author: "Iñaki Mtz"
+  description: "ondemand_exporter"
+  license: "MIT"
+  min_ansible_version: "2.17.3"
+  platforms:
+    - name: "Ubuntu"
+      versions:
+        - "jammy"
+  galaxy_tags:
+    - "openondemand"
+    - "monitoring"
+    - "prometheus"
+    - "exporter"
+    - "metrics"
+    - "system"
