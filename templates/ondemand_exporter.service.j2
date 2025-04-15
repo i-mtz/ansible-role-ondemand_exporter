@@ -21,7 +21,7 @@ Environment=PASSENGER_STATUS={{ ondemand_exporter_path_passenger_status }}
 Environment=PASSENGER_TIMEOUT={{ ondemand_exporter_collector_passenger_timeout }}
 Environment=PROCESS_TIMEOUT={{ ondemand_exporter_collector_process_timeout }}
 
-ExecStart=/usr/bin/ondemand_exporter --log.level=debug
+ExecStart={{ ondemand_exporter_binary_install_dir }}/ondemand_exporter --log.level=debug
 ExecReload=/bin/kill -HUP $MAINPID
 KillMode=process
 Restart=always
